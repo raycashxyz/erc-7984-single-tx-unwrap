@@ -1,5 +1,8 @@
 # ERC-7984 single-transaction unwrap
 
+This research comes from the R&D lab of [Raycash](https://github.com/raycashxyz). The lab does
+research to get the maximum value from the Zama FHEVM and ERC-7984.
+
 ## Why this research exists
 
 Confidential tokens keep balances and amounts encrypted. On the [Zama](https://www.zama.ai/) FHEVM,
