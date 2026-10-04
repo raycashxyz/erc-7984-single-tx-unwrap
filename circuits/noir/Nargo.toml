@@ -1,0 +1,7 @@
+[package]
+name = "unwrap"
+type = "bin"
+authors = ["Raycash"]
+compiler_version = ">=1.0.0"
+
+[dependencies]
