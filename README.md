@@ -223,27 +223,25 @@ shares.
 contracts and a KMS with 13 nodes and threshold 7. It unwraps 400 USDC. Each method has its own new
 holder.
 
-| transaction | gas |
-|---|---|
-| two-step: `unwrap` | 308,999 |
-| two-step: `finalizeUnwrap` (7 of 13 KMS signatures) | 532,122 |
-| **two-step total (2 transactions)** | **841,121** |
-| `unwrapWithProof`, mock verifier | 424,036 |
-| + UltraHonk verification | 746,915 |
-| + UltraHonk proof calldata (9,536 bytes) | 147,152 |
-| **`unwrapWithProof`, Noir/UltraHonk (1 transaction)** | **1,311,184** |
-| + Groth16 verification (with the adapter) | 406,008 |
-| + Groth16 proof calldata (256 bytes) | 4,060 |
-| **`unwrapWithProof`, circom/Groth16 (1 transaction)** | **827,185** |
-| **`unwrapAllWithShares`, no proof (1 transaction)** | **631,907** |
-| two-step unwrap + approval + swap (4 transactions) | 957,221 |
-| `unwrapAndSwap`, Noir/UltraHonk (1 transaction) | 1,356,807 |
-| `unwrapAndSwap`, circom/Groth16 (1 transaction) | 872,808 |
+| method | transactions | unwrap | proof verification | proof calldata | total |
+|---|---|---|---|---|---|
+| two-step `unwrap` → `finalizeUnwrap` (baseline) | 2 | 308,999 + 532,122 | — | — | **841,121** |
+| `unwrapWithProof`, Noir/UltraHonk | 1 | 417,117 | 746,915 | 147,152 | **1,311,184** |
+| `unwrapWithProof`, circom/Groth16 | 1 | 417,117 | 406,008 | 4,060 | **827,185** |
+| `unwrapAllWithShares`, no proof | 1 | 631,907 | — | — | **631,907** |
+
+The columns contain these costs:
+
+- **unwrap.** All the gas of the transaction other than the proof: the intrinsic gas, the calldata
+  without the proof, the signature checks, the burn, and the transfer. For the two-step method, the
+  two values are the `unwrap` transaction and the `finalizeUnwrap` transaction.
+- **proof verification.** The call to the verifier. For Groth16, this value includes the adapter.
+- **proof calldata.** The calldata of the proof: 9,536 bytes for UltraHonk and 256 bytes for Groth16.
 
 In this test, the proof methods use a mock verifier. The test measures the real verifiers
-separately, with real proofs. Then, it replaces the mock cost with the real cost:
-`unwrap − mock verification + real verification + proof calldata`.
-[`test/unwrap.test.ts`](test/unwrap.test.ts) sends the same transactions with real proofs.
+separately, with real proofs. The *unwrap* column is the cost of the mock transaction without the
+mock verification. [`test/unwrap.test.ts`](test/unwrap.test.ts) sends the same transactions with real
+proofs.
 
 The UltraHonk verifier uses 747k gas. This total contains 59 `ecMul` operations (354k), one pairing
 (113k), and approximately 272k for the sumcheck arithmetic. The Groth16 verifier uses one pairing

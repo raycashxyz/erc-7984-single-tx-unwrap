@@ -245,18 +245,40 @@ describe("gas", () => {
     const twoStep = unwrapReceipt.gasUsed + finalizeReceipt.gasUsed;
     const twoStepSwap = twoStep + approveReceipt.gasUsed + swapReceipt.gasUsed;
 
+    // One row per method: the unwrap itself (everything but the proof), the verification, the proof's
+    // calldata, and the total.
+    const unwrapGas = proofReceipt.gasUsed - mockVerifyGas;
     console.table({
-      "two-step unwrap, tx 1 (unwrap)": { gas: unwrapReceipt.gasUsed },
-      "two-step unwrap, tx 2 (finalizeUnwrap, 7-of-13 KMS signatures)": { gas: finalizeReceipt.gasUsed },
-      "two-step unwrap, total (2 tx)": { gas: twoStep },
-      "unwrapWithProof, mock verifier": { gas: proofReceipt.gasUsed },
-      "  UltraHonk verify": { gas: honkVerifyGas },
-      "  UltraHonk proof calldata (9,536 bytes)": { gas: calldataGas(noir.proof) },
-      "unwrapWithProof, Noir/UltraHonk (1 tx)": { gas: honkOneTx },
-      "  Groth16 verify (incl. adapter)": { gas: circomVerifyGas },
-      "  Groth16 proof calldata (256 bytes)": { gas: calldataGas(groth.proof) },
-      "unwrapWithProof, circom/Groth16 (1 tx)": { gas: circomOneTx },
-      "unwrapAllWithShares, no proof (1 tx)": { gas: revealReceipt.gasUsed },
+      "two-step unwrap → finalizeUnwrap": {
+        transactions: 2,
+        unwrap: `${unwrapReceipt.gasUsed} + ${finalizeReceipt.gasUsed}`,
+        verification: "—",
+        proofCalldata: "—",
+        total: twoStep,
+      },
+      "unwrapWithProof, Noir/UltraHonk": {
+        transactions: 1,
+        unwrap: unwrapGas,
+        verification: honkVerifyGas,
+        proofCalldata: calldataGas(noir.proof),
+        total: honkOneTx,
+      },
+      "unwrapWithProof, circom/Groth16": {
+        transactions: 1,
+        unwrap: unwrapGas,
+        verification: circomVerifyGas,
+        proofCalldata: calldataGas(groth.proof),
+        total: circomOneTx,
+      },
+      "unwrapAllWithShares, no proof": {
+        transactions: 1,
+        unwrap: revealReceipt.gasUsed,
+        verification: "—",
+        proofCalldata: "—",
+        total: revealReceipt.gasUsed,
+      },
+    });
+    console.table({
       "two-step unwrap + approve + swap (4 tx)": { gas: twoStepSwap },
       "unwrapAndSwap, Noir/UltraHonk (1 tx)": { gas: honkSwap },
       "unwrapAndSwap, circom/Groth16 (1 tx)": { gas: circomSwap },
